@@ -1,10 +1,19 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.routing import RequestValidationError
 from routes.chat import router as chat_router
 from routes.root import router as root_router
+from db.engine import engine
+from db.models import Base
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 启动时自动创建表
+    Base.metadata.create_all(bind=engine)
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 # region 全局异常处理
 def error_payload(code: str, message: str):
