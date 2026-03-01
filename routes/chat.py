@@ -112,3 +112,10 @@ async def chat(body: ChatRequestBody, db: Session = Depends(get_db)):
     except Exception as e:
         logger.exception("Unexpected error occurred")
         raise HTTPException(status_code=500, detail="服务内部异常")
+
+@router.get('/history/{id}')
+async def get_history(id: str, db: Session = Depends(get_db)):
+    conversation = db.query(Conversation).filter(Conversation.id == id).first()
+    if not conversation:
+        raise HTTPException(status_code=404, detail="对话不存在")
+    return [{"role": msg.role, "content": msg.content} for msg in conversation.messages]
